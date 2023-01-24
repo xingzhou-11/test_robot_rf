@@ -11,12 +11,17 @@ class rf_protocol:
             int.from_bytes(msg[14:16], 'little', signed=True), # 实际扭矩
             msg[16]]) # 传感器保护
         sort_action = lambda msg: (msg[6])
-        sort_sensor_state = lambda msg: (msg[6])
+        moving_cancel = lambda msg: (int.from_bytes(msg[6:10], 'little', signed=True)) # 实际位置
+        sort_sensor_state = lambda msg: ([msg[6]&0x01, msg[6]&0x02, msg[6]&0x04, msg[6]&0x08, msg[6]&0x10, msg[6]&0x20])
         pick_box_action = lambda msg: (msg[7])
         pick_pin_action = lambda msg: (msg[6])
         pick_chain_homing = lambda msg: (msg[6])
-        pick_sensor_state = lambda msg: ([msg[6], msg[7]])
-        moving_read = lambda msg: (int.from_bytes(msg[6:10], 'little', signed=True))
+        pick_sensor_state = lambda msg: ([msg[6]&0x01, msg[6]&0x02, msg[6]&0x04, msg[7]&0x01, msg[7]&0x02, msg[7]&0x04, msg[7]&0x08, msg[7]&0x10, msg[7]&0x20])
+        moving_read = lambda msg: ([
+            int.from_bytes(msg[6:10], 'little', signed=True), # 实际位置
+            int.from_bytes(msg[10:14], 'little', signed=True), # 实际速度
+            int.from_bytes(msg[14:16], 'little', signed=True) # 实际扭矩
+            ])
         pick_chain_control = lambda msg: (int.from_bytes(msg[6:10], 'little', signed=True))
         halt_action = lambda msg: (msg[6])
         pick_sensor_cheeck_loaded = lambda msg: (msg[6])
@@ -27,17 +32,17 @@ class rf_protocol:
         FUNCTION_CODE_HOMING = {"value": 0x01, "func": homing}
         FUNCTION_CODE_MOVING = {"value": 0x02, "func": moving}
         FUNCTION_CODE_SORT_ACTION = {"value": 0x03, "func": sort_action}  # SORT装货抛货
-        FUNCTION_CODE_MOVING_CANCEL = {"value": 0x04}  # 机器人停止移动
+        FUNCTION_CODE_MOVING_CANCEL = {"value": 0x04, "func": moving_cancel}  # 机器人停止移动
         FUNCTION_CODE_SORT_SENSOR_STATE = {"value": 0x05, "func": sort_sensor_state}  # SORT传感器状态
         FUNCTION_CODE_PICK_BOX_ACTION = {"value": 0x06, "func": pick_box_action}  # 机器人拉还箱
         FUNCTION_CODE_PICK_PIN_ACTION = {"value": 0x07, "func": pick_pin_action}  # PICK，PIN IN，PIN OUT
         FUNCTION_CODE_PICK_CHAIN_HOMING = {"value": 0x08, "func": pick_chain_homing}  # 机器人链条回原点
         FUNCTION_CODE_PICK_SENSOR_STATE = {"value": 0x09, "func": pick_sensor_state}  # PICK机器人传感器状态
-        FUNCTION_CODE_PICK_MOVING_READ = {"value": 0x0A, "func": moving_read}  # 读机器人主电机位置
+        FUNCTION_CODE_MOVING_READ = {"value": 0x0A, "func": moving_read}  # 读机器人主电机位置
         FUNCTION_CODE_PICK_CHAIN_DIRECT_CONTROL = {"value": 0x0C, "func": pick_chain_control}  # 链条直接控制
         FUNCTION_CODE_HALT_ACTION = {"value": 0x76, "func": halt_action}  # 机器人暂停，恢复
         FUNCTION_CODE_PICK_SENSOR_CHECK_LOADED = {"value": 0x87, "func": pick_sensor_cheeck_loaded}
-        FUNCTION_CODE_PICK_SENSOR_CHECK_LOADING = {"value": 0x88, }  # 拉箱中传感器检查
+        FUNCTION_CODE_PICK_SENSOR_CHECK_LOADING = {"value": 0x88, "func": pick_sensor_cheeck_unload}  # 拉箱中传感器检查
         FUNCTION_CODE_PICK_SENSOR_CHECK_UNLOADED = {"value": 0x89, "func": pick_sensor_cheeck_unload}  # 还箱完成传感器检查
         FUNCTION_CODE_PICK_BOX_ACTION_AT_ENTRANCE = {"value": 0xDC, "func": pick_box_action} # 机器人拉还箱
         FUNCTION_CODE_DEBUG = {"value": 0xDD, }  # DEBUG

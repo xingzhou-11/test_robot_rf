@@ -49,7 +49,7 @@ class robot_rf_packet:
         data = data + crc_ret
         return data
 
-    def robot_moving_package(self, function_code: int, absolute_target: int, velocity_in_counts: int) -> bytes:
+    def cm0_moving_package(self, function_code: int, absolute_target: int, velocity_in_counts: int) -> bytes:
         """机器人移动
 
         Args:
@@ -61,9 +61,30 @@ class robot_rf_packet:
             bytes: data package
         """
         function = function_code.to_bytes(1, byteorder='little', signed=False)
-        position = absolute_target.to_bytes(4, byteorder='little', signed=False)
+        position = absolute_target.to_bytes(4, byteorder='little', signed=True)
         velocity = velocity_in_counts.to_bytes(4, byteorder='little', signed=False)
         data = self.Batch_Number + self.rf_addr + function + position + velocity
+        crc_ret = self.crc.calc_bytes(data[5:]).to_bytes(4, byteorder='big')
+        data = data + crc_ret
+        return data
+
+    def srg_moving_package(self, function_code: int, absolute_target: int, velocity_in_counts: int, additional_info: int) -> bytes:
+        """机器人移动
+
+        Args:
+            function_code (int): 功能码
+            absolute_target (int): 目标位置
+            velocity_in_counts (int): 目标速度
+            additional_info (int): 附加信息
+
+        Returns:
+            bytes: data package
+        """
+        function = function_code.to_bytes(1, byteorder='little', signed=False)
+        position = absolute_target.to_bytes(4, byteorder='little', signed=True)
+        velocity = velocity_in_counts.to_bytes(4, byteorder='little', signed=False)
+        add_info = additional_info.to_bytes(1, byteorder='little', signed=False)
+        data = self.Batch_Number + self.rf_addr + function + position + velocity + add_info
         crc_ret = self.crc.calc_bytes(data[5:]).to_bytes(4, byteorder='big')
         data = data + crc_ret
         return data
