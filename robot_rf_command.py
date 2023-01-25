@@ -3,7 +3,6 @@ from rf_parameters import parameters
 from robot_rf_packet import robot_rf_packet
 from enum import Enum
 import logging
-import signal
 import socket
 import datetime
 import time
@@ -25,7 +24,6 @@ class robot_rf_command(robot_rf_packet):
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.settimeout(0.02)  # 设置udp接收超时时间
         self.udp_address = (rf_getway_ip, 8080)
-        signal.signal(signal.SIGINT, quit)
 
     def udp_data_parse(self, function_code: int, data_packet: bytes) -> str:
         """UDP数据发送接收解析
@@ -37,10 +35,11 @@ class robot_rf_command(robot_rf_packet):
         Returns:
             _type_: str
         """
+        end_time = datetime.datetime.now() + datetime.timedelta(seconds = 5)
         while True:
             try:
                 self.udp_socket.sendto(data_packet, self.udp_address)
-                logger.info(f"send:{data_packet}")
+                logger.info("send:" + data_packet.hex(":"))
                 recv_msg, _ = self.udp_socket.recvfrom(1024)
                 logger.info(f"recv:{recv_msg}")
                 if int(recv_msg[5]) == function_code:
@@ -49,6 +48,8 @@ class robot_rf_command(robot_rf_packet):
                             return func.value['func'](recv_msg)
             except Exception as e:
                 print('str(e):\t\t', str(e))
+                if datetime.datetime.now() > end_time:
+                    return
 
     def robot_state_parse(self, rf_protocol_ENUM: Enum, data: int) -> int:
         """udp数据解析
@@ -101,7 +102,7 @@ class robot_rf_command(robot_rf_packet):
         
         send_data = self.packet.cm0_moving_package(function_code, absolute_target, velocity_in_counts)
         recv_data = self.udp_data_parse(function_code, send_data)
-        while not abs(desired_position - recv_data[0]) < 100 or recv_data[3] is 0x02:
+        while not abs(desired_position - recv_data[0]) < 100 or recv_data[3] == 0x02:
             recv_data = self.udp_data_parse(function_code, send_data)
             print(f"position:{recv_data[0]}, velocity:{recv_data[1]}, torque:{recv_data[2]}, info:{recv_data[3]}")
 
@@ -121,7 +122,7 @@ class robot_rf_command(robot_rf_packet):
 
         send_data = self.packet.srg_moving_package(function_code, absolute_target, velocity_in_counts, additional_info)
         recv_data = self.udp_data_parse(function_code, send_data)
-        while not abs(desired_position - recv_data[0]) < 100 or recv_data[3] is 0x02:
+        while not abs(desired_position - recv_data[0]) < 100 or recv_data[3] == 0x02:
             recv_data = self.udp_data_parse(function_code, send_data)
             print(f"position:{recv_data[0]}, velocity:{recv_data[1]}, torque:{recv_data[2]}, info:{recv_data[3]}")
     
@@ -177,10 +178,13 @@ class robot_rf_command(robot_rf_packet):
         function_code = parameters.sort_sensor_state["func"]
 
         send_data = self.packet.sort_sensor_state_package(self, function_code)
-        while True:
-            recv_data = self.udp_data_parse(function_code, send_data)
-            print(f"a_side:{recv_data[0]}, center:{recv_data[1]}, b_side:{recv_data[2]}, homing:{recv_data[3]}, avoidance:{recv_data[4]}, lifter_homing:{recv_data[5]}")
-            time.sleep(1)
+        try:
+            while True:
+                recv_data = self.udp_data_parse(function_code, send_data)
+                print(f"a_side:{recv_data[0]}, center:{recv_data[1]}, b_side:{recv_data[2]}, homing:{recv_data[3]}, avoidance:{recv_data[4]}, lifter_homing:{recv_data[5]}")
+                time.sleep(1)
+        except KeyboardInterrupt as e:
+            print('str(e):\t\t', str(e))
         
     def pick_box_action_command(self):
         """pick拉还箱命令
@@ -242,11 +246,14 @@ class robot_rf_command(robot_rf_packet):
         function_code = parameters.pick_senson_state["func"]
 
         send_data = self.packet.pick_sensor_state_package(function_code)
-        while True:
-            recv_data = self.udp_data_parse(function_code, send_data)
-            print(f"homing:{recv_data[0]}, chain homing:{recv_data[1]}, avoidance:{recv_data[2]}")
-            print(f"A1:{recv_data[3]}, A2:{recv_data[4]}, A3:{recv_data[5]}, A4:{recv_data[6]}, A5:{recv_data[7]}, A6:{recv_data[8]}")
-            time.sleep(1)
+        try:
+            while True:
+                recv_data = self.udp_data_parse(function_code, send_data)
+                print(f"homing:{recv_data[0]}, chain homing:{recv_data[1]}, avoidance:{recv_data[2]}")
+                print(f"A1:{recv_data[3]}, A2:{recv_data[4]}, A3:{recv_data[5]}, A4:{recv_data[6]}, A5:{recv_data[7]}, A6:{recv_data[8]}")
+                time.sleep(1)
+        except KeyboardInterrupt as e:
+            print('str(e):\t\t', str(e))
 
     def moving_read(self):
         """读机器人位置

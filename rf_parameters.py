@@ -85,7 +85,7 @@ class parameters:
 
     pick_chain_direct_control = {
         "func": rf_protocol.ENUM_FUNCTION_CODE.FUNCTION_CODE_PICK_CHAIN_DIRECT_CONTROL.value["value"],
-        "cmd": rf_protocol.ENUM_PICK_CHAIN_DIRECT_CTRL_CMD.CHAIN_DIRECT_CONTROL_SET_TARGET.value["value"],
+        "cmd": rf_protocol.ENUM_PICK_CHAIN_DIRECT_CTRL_CMD.CHAIN_DIRECT_CONTROL_SET_TARGET.value,
         "absolute_target_position": 0
     }
 

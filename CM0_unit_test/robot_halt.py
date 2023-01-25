@@ -1,4 +1,4 @@
-from robot_rf_action import *
+from ..robot_rf_action import *
 import argparse
 
 parser = argparse.ArgumentParser(description='A test program.')
