@@ -1,58 +1,53 @@
-from rf_protocol import *
-from robot_rf_command import *
-import argparse
+#!/usr/bin/python3
+from argparse import ArgumentParser, RawTextHelpFormatter
+import textwrap
+import sys 
+sys.path.append("..") 
+from rf_protocol import rf_protocol
+from rf_parameters import parameters
+from robot_rf_command import robot_rf_command
 
-def pick_chain_action(robot_rf_addr: str, getway_ip: str, wait_state: list, action_command: str):
-    """pick链条动作
+parser = ArgumentParser(
+    description='change claw test arguments', 
+    usage='use "python %(prog)s --help" for more information',
+    formatter_class=RawTextHelpFormatter
+)
+parser.add_argument("rf_address", type=str, help="rf address")
+parser.add_argument("getway_ip", type=str, help="ip address of getway")
+parser.add_argument("command", type=str, 
+    help=textwrap.dedent('''\
+    READ 0x00
+    START 0x01
+    CLEAR_STATE 0x02
+    DIRECT 0x03'''))
 
-    Args:
-        rf_address (str): 机器人rf地址
-        gateway_ip (str): 网关IP地址
-        wait_state (list): 可以退出的状态列表
-        action_command (str): 链条动作, read, start, clear_state, direct
-    """
-    
-    pick_robot = robot_rf_command(robot_rf_addr, getway_ip)
+args = parser.parse_args()
 
-    robot_action = {
-        "read": "PICK_CHAIN_HOMING_CMD_READ",
-        "start": "PICK_CHAIN_HOMING_CMD_START",
-        "clear_state": "PICK_CHAIN_HOMING_CMD_CLEAR_STATE", # 清除原点
-        "direct": "PICK_CHAIN_HOMING_CMD_DIRECT"  # 当前位置为原点
-    }
-    
-    robot_state = pick_robot.pick_chain_homing_command(rf_protocol.ENUM_FUNCTION_CODE.FUNCTION_CODE_PICK_CHAIN_HOMING.value["value"], rf_protocol.ENUM_PICK_CHAIN_HOMING_CMD[robot_action[action_command]].value)
-
-    while robot_state not in wait_state:
-        robot_state = pick_robot.pick_chain_homing_command(rf_protocol.ENUM_FUNCTION_CODE.FUNCTION_CODE_PICK_CHAIN_HOMING.value["value"], rf_protocol.ENUM_PICK_CHAIN_HOMING_CMD[robot_action[action_command]].value)
-    
-    return robot_state
-
-if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description = 'change claw test arguments')
-    parser.add_argument("rf_address", help = "rf address", type = str)
-    parser.add_argument("getway_ip", help = "ip address of getway", type = str)
-    parser.add_argument("action_command", help = "action command", type = str)
-    args = parser.parse_args()
-    
-    wait_state = {
-        "read": [
+def wite_state(command: str):
+    wait = {
+        "0x00": [
             rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["chinese"], 
             rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_IN_PROGRESS.value["chinese"], 
             rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"], 
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["chinese"], 
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["chinese"]
         ], 
-        "start": [
+        "0x01": [
             rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"], 
             rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["chinese"]
         ], 
-        "clear_state": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["chinese"], 
-        ],
-        "direct": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"], 
+        "0x02": [
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["chinese"]
+        ], 
+        "0x03": [
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"]
         ]
     }
+    
+    return wait[command]
 
-    pick_chain_action(args.rf_address, args.getway_ip, wait_state[args.action_command], args.action_command)
+if __name__ == "__main__":
+    parameters.pick_chain_homing["cmd"] = int(args.command, 16)
+    parameters.pick_chain_homing["wait"] = wite_state(args.command)
+
+    robot = robot_rf_command(args.rf_address, args.getway_ip)
+    robot.pick_chain_homing_command()
