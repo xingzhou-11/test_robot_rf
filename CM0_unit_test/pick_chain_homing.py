@@ -12,6 +12,7 @@ parser = ArgumentParser(
     usage='use "python %(prog)s --help" for more information',
     formatter_class=RawTextHelpFormatter
 )
+
 parser.add_argument("rf_address", type=str, help="rf address")
 parser.add_argument("getway_ip", type=str, help="ip address of getway")
 parser.add_argument("command", type=str, 
@@ -23,23 +24,23 @@ parser.add_argument("command", type=str,
 
 args = parser.parse_args()
 
-def wite_state(command: str):
+def wait_state(command: str):
     wait = {
         "0x00": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["chinese"], 
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_IN_PROGRESS.value["chinese"], 
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"], 
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["chinese"]
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["value"], 
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_IN_PROGRESS.value["value"], 
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["value"], 
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["value"]
         ], 
         "0x01": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"], 
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["chinese"]
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["value"], 
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_ERROR.value["value"]
         ], 
         "0x02": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["chinese"]
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_UNKNOWN.value["value"]
         ], 
         "0x03": [
-            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["chinese"]
+            rf_protocol.ENUM_PICK_CHAIN_HOMING_STATES.PICK_CHAIN_HOMING_COMPLETED.value["value"]
         ]
     }
     
@@ -47,7 +48,7 @@ def wite_state(command: str):
 
 if __name__ == "__main__":
     parameters.pick_chain_homing["cmd"] = int(args.command, 16)
-    parameters.pick_chain_homing["wait"] = wite_state(args.command)
+    parameters.pick_chain_homing["wait"] = wait_state(args.command)
 
     robot = robot_rf_command(args.rf_address, args.getway_ip)
     robot.pick_chain_homing_command()
