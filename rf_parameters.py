@@ -103,5 +103,5 @@ class parameters:
     }
 
     robot_end_state = {
-        "state": rf_protocol.ENUM_SHUTTLE_STATE.SHUTTLE_STATE_ONLINE.value["value"]
+        "enum": rf_protocol.ENUM_SHUTTLE_STATE.SHUTTLE_STATE_ONLINE
     }

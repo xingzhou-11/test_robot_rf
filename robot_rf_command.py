@@ -41,6 +41,7 @@ class robot_rf_command(robot_rf_packet):
                 self.udp_socket.sendto(data_packet, self.udp_address)
                 logger.info("send:" + data_packet.hex(":"))
                 recv_msg, _ = self.udp_socket.recvfrom(1024)
+                end_time = datetime.datetime.now() + datetime.timedelta(seconds = 50)
                 logger.info(f"recv:{recv_msg}")
                 if int(recv_msg[5]) == function_code:
                     for func in rf_protocol.ENUM_FUNCTION_CODE:
@@ -63,8 +64,8 @@ class robot_rf_command(robot_rf_packet):
         """
         for state in rf_protocol_ENUM:
             if state.value["value"] == data:
-                print(state.value["chinese"])
-                return state.value["value"]
+                print(state)
+                return state
 
 
     def ping_command(self):
@@ -76,7 +77,7 @@ class robot_rf_command(robot_rf_packet):
 
         send_data = self.packet.robot_ping_package(function_code, state_command)
         recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
 
     def homing_command(self):
         """机器人回原点
@@ -90,7 +91,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
         
     def cm0_moving_command(self):
         """CM0移动
@@ -161,7 +162,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
         
     def moving_cancel_command(self):
         """主轴停止移动
@@ -210,7 +211,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
 
     def pick_pin_action_command(self):
         """pick机器人 pin in  pin out
@@ -224,7 +225,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
 
     def pick_chain_homing_command(self):
         """pick机器人链条回原点命令
@@ -238,7 +239,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
 
     def pick_sensor_state_command(self):
         """读pick机器人传感器
@@ -290,7 +291,7 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["value"] = self.robot_state_parse(finally_state_enum, recv_data)
 
     def pick_sensor_check_command(self):
         """box action sensor check
@@ -303,4 +304,4 @@ class robot_rf_command(robot_rf_packet):
         recv_data = self.udp_data_parse(function_code, send_data)
         while recv_data not in wait:
             recv_data = self.udp_data_parse(function_code, send_data)
-        parameters.robot_end_state["state"] = self.robot_state_parse(finally_state_enum, recv_data)
+        parameters.robot_end_state["enum"] = self.robot_state_parse(finally_state_enum, recv_data)
